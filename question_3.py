@@ -5,6 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
 from tqdm import trange
+import random
 
 
 
@@ -78,15 +79,16 @@ def k_means(n_clusters, dataset, epochs, is_3d=False):
     
     # Initial clusters
     for cluster in range(n_clusters):
-        clusters[cluster] = []
         if (is_3d is False):
-            centroids[cluster] = [np.random.randn(), np.random.randn()]
+            centroids[cluster] = [random.uniform(-3,3), random.uniform(-3,3)]
         else:
-            centroids[cluster] = [np.random.randn(), np.random.randn(), np.random.randn()]
+            centroids[cluster] = [random.uniform(-3,3), random.uniform(-3,3), random.uniform(0,3)]
     
-    
+    # print(centroids)
     ### Algorithm to minimize the total_variance###
     for epoch in trange(epochs):
+        for cluster_id in range(n_clusters):
+            clusters[cluster_id] = []
         total_variance = 0
         for point in dataset:
             # print("\nData point --> {}\n".format(point))
@@ -100,13 +102,16 @@ def k_means(n_clusters, dataset, epochs, is_3d=False):
             
             minimum_norm_index = np.argmin(stored_norms)
             # print(minimum_norm_index)
-            clusters[minimum_norm_index].append(point.tolist())
             
+            clusters[minimum_norm_index].append(point.tolist())
             total_variance += stored_norms[minimum_norm_index]
             # print(total_variance)
             
-        for cluster_id in clusters:
+        for cluster_id in centroids:
+            if (clusters[cluster_id] == []):
+                continue
             cluster_data = clusters[cluster_id]
+
             
             if (is_3d is False):
                 best_centroid = np.zeros(shape=(2,))
@@ -125,21 +130,31 @@ def k_means(n_clusters, dataset, epochs, is_3d=False):
         
 
 
-def calculate_cost(predicted_clusters):
-        
+def calculate_cost(predicted_clusters, data):
     
+    predicted_cluster_labels = []
+    
+    
+    for cluster_id in predicted_clusters:
+        cluster_data = predicted_clusters[cluster_id]
+        for point in cluster_data:
+            index = data.tolist().index(point)
+            if (index >= 100):
+                predicted_cluster_labels.append(0)
+            else:
+                predicted_cluster_labels.append(1)
     error = 0
-    correct_matrix = np.zeros(shape=(len(predicted_clusters),))
+    correct_matrix = np.zeros(shape=(len(predicted_cluster_labels),))
     for i in range(100):
         correct_matrix[i] = 1
     
-    subtracted_list = np.subtract(correct_matrix, predicted_clusters)
+    subtracted_list = np.subtract(correct_matrix, predicted_cluster_labels)
     
     for element in subtracted_list:
         if element != 0:
             error += 1
     
-    error_percentage = error / len(predicted_clusters) * 100
+    error_percentage = error / len(predicted_cluster_labels) * 100
     
     print('Total mistakes --> {}\n'.format(error))
     print('Error --> {} %\n'.format(error_percentage))
@@ -147,7 +162,7 @@ def calculate_cost(predicted_clusters):
     return error_percentage
 
 if __name__ == "__main__":
-    np.random.seed(1)
+    random.seed(2)
     x_data, all_data = load_data()
     
 
@@ -174,7 +189,7 @@ if __name__ == "__main__":
     
     total_variance, clusters, centroids = k_means(n_clusters=2, dataset=data, epochs=50)
     
-    print(total_variance, '\n')
+    print(total_variance[-1], '\n')
     
     clusters_as_arrays = []
     for key in clusters:
@@ -185,15 +200,19 @@ if __name__ == "__main__":
         centroids_as_arrays.append(centroids[key])
     
     plot_data(clusters_as_arrays, pair_list=True, centroids=True, centroid_list=centroids_as_arrays)
+    # print('len clusters -> {}'.format(len(clusters[0])))
     
+    calculate_cost(clusters, data)
     #######################################################3-D KMEANS################################################################
     
     data = data.tolist()
     for pair in data:
         pair.append(np.sqrt((pair[0]**2) + (pair[1]**2)))
         
-    total_variance, clusters, centroids = k_means(n_clusters=2, dataset=np.array(data), epochs=20, is_3d=True)
+    total_variance, clusters, centroids = k_means(n_clusters=2, dataset=np.array(data), epochs=50, is_3d=True)
+    
     plot_3d_clusters(clusters, centroids)
     
-    # calculate_cost(clusters)
+    calculate_cost(clusters, np.array(data))
+    
     
