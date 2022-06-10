@@ -1,5 +1,5 @@
 
-from operator import indexOf, is_
+from operator import indexOf
 from mat4py import loadmat
 import numpy as np
 from matplotlib import pyplot as plt
@@ -132,17 +132,15 @@ def k_means(n_clusters, dataset, epochs, is_3d=False):
 
 def calculate_cost(predicted_clusters, data):
     
-    predicted_cluster_labels = []
-    
+    predicted_cluster_labels = np.zeros(shape=(200,))
     
     for cluster_id in predicted_clusters:
         cluster_data = predicted_clusters[cluster_id]
         for point in cluster_data:
             index = data.tolist().index(point)
-            if (index >= 100):
-                predicted_cluster_labels.append(0)
-            else:
-                predicted_cluster_labels.append(1)
+            predicted_cluster_labels[index] = cluster_id
+            
+    print(predicted_cluster_labels)
     error = 0
     correct_matrix = np.zeros(shape=(len(predicted_cluster_labels),))
     for i in range(100):
@@ -162,7 +160,7 @@ def calculate_cost(predicted_clusters, data):
     return error_percentage
 
 if __name__ == "__main__":
-    random.seed(2)
+    random.seed(1066539)
     x_data, all_data = load_data()
     
 
@@ -187,7 +185,7 @@ if __name__ == "__main__":
     
     #######################################################2-D KMEANS################################################################
     
-    total_variance, clusters, centroids = k_means(n_clusters=2, dataset=data, epochs=50)
+    total_variance, clusters, centroids = k_means(n_clusters=2, dataset=data, epochs=10)
     
     print(total_variance[-1], '\n')
     
@@ -209,7 +207,7 @@ if __name__ == "__main__":
     for pair in data:
         pair.append(np.sqrt((pair[0]**2) + (pair[1]**2)))
         
-    total_variance, clusters, centroids = k_means(n_clusters=2, dataset=np.array(data), epochs=50, is_3d=True)
+    total_variance, clusters, centroids = k_means(n_clusters=2, dataset=np.array(data), epochs=10, is_3d=True)
     
     plot_3d_clusters(clusters, centroids)
     
